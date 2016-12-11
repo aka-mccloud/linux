@@ -27,6 +27,9 @@
 #define PUNIT_SEMAPHORE_BIT	BIT(0)
 #define PUNIT_SEMAPHORE_ACQUIRE	BIT(1)
 
+#define PUNIT_DOORBELL_OPCODE	(0xE0)
+#define PUNIT_DOORBELL_REG	(0x0)
+
 static unsigned long acquired;
 
 static int get_sem(struct dw_i2c_dev *dev, u32 *sem)
@@ -77,6 +80,12 @@ static int baytrail_i2c_acquire(struct dw_i2c_dev *dev)
 	ret = iosf_mbi_write(BT_MBI_UNIT_PMC, MBI_REG_WRITE, PUNIT_SEMAPHORE, sem);
 	if (ret) {
 		dev_err(dev->dev, "iosf punit semaphore request failed\n");
+		return ret;
+	}
+
+	ret = iosf_mbi_write(BT_MBI_UNIT_PMC, PUNIT_DOORBELL_OPCODE, PUNIT_DOORBELL_REG, 0);
+	if (ret) {
+		dev_err(dev->dev, "iosf punit doorbell request failed\n");
 		return ret;
 	}
 
