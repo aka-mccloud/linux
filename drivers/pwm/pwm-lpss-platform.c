@@ -13,10 +13,16 @@
 #include <linux/acpi.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/pwm.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
 
 #include "pwm-lpss.h"
+
+/* PWM consumed by the Intel GFX */
+static struct pwm_lookup lpss_pwm_lookup[] = {
+	PWM_LOOKUP("80862288:00", 0, "0000:00:02.0", "pwm_lpss", 0, PWM_POLARITY_NORMAL),
+};
 
 static int pwm_lpss_probe_platform(struct platform_device *pdev)
 {
@@ -37,6 +43,9 @@ static int pwm_lpss_probe_platform(struct platform_device *pdev)
 		return PTR_ERR(lpwm);
 
 	platform_set_drvdata(pdev, lpwm);
+
+	/* Register intel-gfx device as allowed consumer */
+	pwm_add_table(lpss_pwm_lookup, ARRAY_SIZE(lpss_pwm_lookup));
 
 	pm_runtime_set_active(&pdev->dev);
 	pm_runtime_enable(&pdev->dev);
